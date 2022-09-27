@@ -5,7 +5,7 @@ OBJETIVO: Plotar a superfície de falha pelos 3 critérios e mostrar o ponto de 
     -> Entrada pelas propriedades diretas ou regra das misturas;
     
 CONSIDERAÇÕES:
-    -> Todas as lâminas do mesmo material;
+    -> Todas as lâminas do mesmo material e mesma espessura;
 '''
 #----------------DADOS DE ENTRADA----------------
 # Opções de entrada: 0-> Propriedades do material; 1->Regra das Misturas
@@ -25,3 +25,21 @@ elif ent_opt == 1:
 else:
     print('Opção Inválida de entrada')
 
+Nx = 1000 # N/mm
+Ny = 200 # N/mm
+F = [Nx, Ny]
+pos_lam = [0, 90, 90, 0]
+n_lam = np.size(pos_lam) # número de camadas
+h = 3 # mm (espessura de cada lâmina)
+h_lam = np.zeros(np.size(pos_lam))
+h_lam = h_lam.tolist()
+'''
+if n_lam % 2 == 0: # se o numero de lâminas for par entra aqui
+    for i in range(0,n_lam, 1):
+        h_lam.itemset((i), h+h/2 )
+
+else: # se o numero de lâminas for impar entra aqui
+    for i in range(0,n_lam, 1):
+        h_lam.itemset((i), h+h/2 )
+
+'''
