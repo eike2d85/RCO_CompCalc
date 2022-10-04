@@ -31,20 +31,15 @@ F = [Nx, Ny]
 pos_lam = [0, 90, 90, 0, 45, 45]
 n_lam = np.size(pos_lam) # número de camadas
 h = 3 # mm (espessura de cada lâmina)
-#h_lam = [-2*h, -1*h, 1*h, 2*h] # isso é a posição da camada em relação ao plano médio, multiplicada pela espessura de cada camada
-
-h_lam = np.zeros(np.size(pos_lam))
-# h_lam = h_lam.tolist()
 
 if n_lam % 2 == 0: # se o numero de lâminas for PAR entra aqui
-    for i in range(0 ,n_lam, 1):
-        if i < (n_lam/2):
-            h_lam.itemset((i), -((n_lam/2)-i)*h)
-        if i >= (n_lam/2):
-            h_lam.itemset((i), -((n_lam/2)-i)*h)
+    h_lam = np.zeros(n_lam+1)
+    for i in range(0 ,n_lam+1, 1):
+        h_lam.itemset((i), -((n_lam/2)-i)*h)
 
 else: # se o numero de lâminas for IMPAR entra aqui
-    for i in range(0,n_lam, 1):
-        h_lam.itemset((i), h+h/2 ) 
+    h_lam = np.zeros(n_lam+1)
+    for i in range(0,n_lam+1, 1):
+        h_lam.itemset((i), -((n_lam/2)-i)*h ) 
 
 print(h_lam)
