@@ -53,6 +53,7 @@ else: # se o numero de lâminas for IMPAR entra aqui
 
 ABBD_inv, jureg = matriz(E1, E2, G12, v12, pos_lam, h_lam, n_lam)
 
+
 print('ABBD invertida:\n', ABBD_inv)
 for fiona in range(0,n_lam,1):
     print('Matriz de rigidez local da lâmina %.0f: \n' %(fiona), jureg[fiona])
