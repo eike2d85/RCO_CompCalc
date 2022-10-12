@@ -1,7 +1,7 @@
 import numpy as np
 import math
 
-def matriz(E1, E2, G12, P12, lam_ori, h, num): #P12 é o poisson
+def matriz(E1, E2, G12, P12, lam_ori, h, num):
 
     Qkg = np.zeros(num)
     Qkg = Qkg.ravel().tolist()
@@ -12,18 +12,17 @@ def matriz(E1, E2, G12, P12, lam_ori, h, num): #P12 é o poisson
     Q12 = (P12*E1*E2/(E1-E2*P12**2))
     Q = np.array([[Q11, Q12, 0], [Q12, Q22, 0], [0, 0, Q66]])
 
-#---------------------------Matriz de Reuter----------------------------
+#---------------------------Matriz R----------------------------
     R = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 2]])
     R_inv = np.linalg.inv(R)
 #---------------------Matriz de Rigidez Transformada---------------------
-    lam_ori = np.array(lam_ori)
-    lam_ori = (math.pi/180)*lam_ori
     for lamina in range(num):
         m = math.cos(lam_ori[lamina])
         n = math.sin(lam_ori[lamina])
         T = np.array([[m**2, n**2, 2*m*n], [n**2, m**2, -2*m*n], [-m*n, m*n, (m**2 - n**2)]])
         T_inv = np.linalg.inv(T)
         Qkg[lamina] = np.linalg.multi_dot([T_inv, Q, R, T, R_inv])
+
 #------------------------------Matriz ABBD------------------------------
     A_h_dif = np.zeros(num)
     B_h_dif = np.zeros(num)
@@ -44,15 +43,21 @@ def matriz(E1, E2, G12, P12, lam_ori, h, num): #P12 é o poisson
     A = sum(A_prod)
     B = sum(B_prod)/2
     D = sum(D_prod)/3
+    
+    A_ast = np.linalg.inv(A)
+    B_ast = -A_ast.dot(B)
+    C_ast = B.dot(A_ast)
+    D_ast = D - np.linalg.multi_dot([B, A_ast, B])
+    A_l = A_ast + np.linalg.multi_dot([B_ast, np.linalg.inv(D_ast), B_ast.T])
+    B_l = B_ast.dot(np.linalg.inv(D_ast))
+    C_l = - D_ast.dot(C_ast)
+    D_l = np.linalg.inv(D_ast)
+#---------------------------Matriz ABBD Invertida---------------------------
+    Qg_l = np.array([[A_l[0][0], A_l[0][1], A_l[0][2], B_l[0][0], B_l[0][1], B_l[0][2]], 
+                    [A_l[1][0], A_l[1][1], A_l[1][2], B_l[1][0], B_l[1][1], B_l[1][2]], 
+                    [A_l[2][0], A_l[2][1], A_l[2][2], B_l[2][0], B_l[2][1], B_l[2][2]],
+                    [C_l[0][0], C_l[0][1], C_l[0][2], D_l[0][0], D_l[0][1], D_l[0][2]], 
+                    [C_l[1][0], C_l[1][1], C_l[1][2], D_l[1][0], D_l[1][2], D_l[1][2]], 
+                    [C_l[2][0], C_l[2][1], C_l[2][2], D_l[2][0], D_l[2][1], D_l[2][2]]])
 
-#---------------------------Matriz ABBD ---------------------------
-    Qg_l = np.array([[A[0][0], A[0][1], A[0][2], B[0][0], B[0][1], B[0][2]], 
-                    [A[1][0], A[1][1], A[1][2], B[1][0], B[1][1], B[1][2]], 
-                    [A[2][0], A[2][1], A[2][2], B[2][0], B[2][1], B[2][2]],
-                    [B[0][0], B[0][1], B[0][2], D[0][0], D[0][1], D[0][2]], 
-                    [B[1][0], B[1][1], B[1][2], D[1][0], D[1][2], D[1][2]], 
-                    [B[2][0], B[2][1], B[2][2], D[2][0], D[2][1], D[2][2]]])
-
-    Qg_l_inv = np.linalg.inv(Qg_l)
-
-    return(Qg_l_inv,Qkg)
+    return(Qg_l,Qkg)
