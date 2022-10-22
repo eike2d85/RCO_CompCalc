@@ -1,6 +1,8 @@
 import numpy as np
 from regmist_input import regmist_input
 from matriz import matriz
+from deformacao import deformacao
+from tensao import tensao
 '''
 OBJETIVO: Plotar a superfície de falha pelos 3 critérios e mostrar o ponto de cada lâmina. Printar se cada lâmina falhou ou não e o tipo da falha.
     -> Entrada pelas propriedades diretas ou regra das misturas;
@@ -36,6 +38,8 @@ pos_lam = [0, 90, 90, 0, 45, 45]
 h = 3 # mm (espessura de cada lâmina)
 #----------------------FIM DOS INPUTS-----------------------
 F = [Nx, Ny, Nz, Mx, My, Mz]
+F = np.array(F)
+pos_lam_rad = np.multiply(np.pi/180, pos_lam)
 n_lam = np.size(pos_lam) # número de camadas
 h_lam = np.zeros(n_lam+1)
 E1 = props[0]
@@ -51,9 +55,19 @@ else: # se o numero de lâminas for IMPAR entra aqui
     for i in range(0,n_lam+1, 1):
         h_lam.itemset((i), -((n_lam/2)-i)*h ) 
 
-ABBD_inv, jureg = matriz(E1, E2, G12, v12, pos_lam, h_lam, n_lam)
+Q_lam, ABBD, ABBD_inv = matriz(E1, E2, G12, v12, pos_lam, h_lam, n_lam)
 
+def_global, k_global, def_lamina, def_local= deformacao(n_lam, h_lam, pos_lam_rad, ABBD_inv, F)
+tensao_global, tensao_local= tensao(n_lam, h_lam, pos_lam_rad, k_global, def_global, Q_lam)
 
+print('ABBD :\n', ABBD)
 print('ABBD invertida:\n', ABBD_inv)
 for fiona in range(0,n_lam,1):
-    print('Matriz de rigidez local da lâmina %.0f: \n' %(fiona), jureg[fiona])
+    print('Matriz de rigidez local da lâmina %.0f: \n' %(fiona), Q_lam[fiona])
+
+print('Deformações_global :\n', def_global)
+print('Curvatura :\n', k_global)
+print('Deformações_lâmina :\n', def_lamina)
+print('Deformações_local :\n', def_local)
+print('Tensões Globais :\n', tensao_global)
+print('Tensões Local :\n', tensao_local)
