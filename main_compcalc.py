@@ -13,7 +13,7 @@ CONSIDERAÇÕES:
     -> Todas as lâminas do mesmo material e mesma espessura;
 '''
 #----------------INÍCIO DOS INPUTS----------------
-# Opções de entrada: 0-> Propriedades do material; 1->Regra das Misturas
+# Opções de entrada: 0-> Propriedades diretas do material; 1->Regra das Misturas
 ent_opt = 0
 
 if ent_opt == 0:
@@ -38,13 +38,13 @@ My = 0 # N/mm
 Mz = 0 # N/mm
 
 # Dados de material
-Xt = 1447.0E6      # Resistência à tração 
-Xc = -1447.0E6     # Resistência à compressão 
-Yt = 51.7E6        # Resistência à tração 
-Yc = -206.0E6      # Resistência à compressão 
+Xt = 1447.0E6      # Resistência à tração X
+Xc = -1447.0E6     # Resistência à compressão X
+Yt = 51.7E6        # Resistência à tração Y
+Yc = -206.0E6      # Resistência à compressão Y
 S12 = 93.0E6       # Resistência ao cisalhamento no plano 1-2  
 pos_lam = [0, 90, 90, 0, 45, 45]
-h = 3 # mm (espessura de cada lâmina)
+h = 0.5 # mm (espessura de cada lâmina)
 #----------------------FIM DOS INPUTS-----------------------
 F = [Nx, Ny, Nz, Mx, My, Mz]
 F = np.array(F)
@@ -73,7 +73,6 @@ print('ABBD :\n', ABBD)
 print('ABBD invertida:\n', ABBD_inv)
 for fiona in range(0,n_lam,1):
     print('Matriz de rigidez local da lâmina %.0f: \n' %(fiona), Q_lam[fiona])
-
 print('Deformações_global :\n', def_global)
 print('Curvatura :\n', k_global)
 print('Deformações_lâmina :\n', def_lamina)
@@ -81,17 +80,37 @@ print('Deformações_local :\n', def_local)
 print('Tensões Globais :\n', tensao_global)
 print('Tensões Local :\n', tensao_local)
 
-sigma_12 = 80000 #isso de ve ser retirado, é so teste
+sigma_12 = 0 #isso deve ser retirado, é so teste
 
 
-plt.figure()
+plt.figure(1)
 plt.axis('equal')
-plt.plot([Xt,Xc,Xc,Xt, Xt], [Yt,Yt,Yc,Yc,Yt], label="Máxima Tensão", color='pink')
+plt.plot([Xt,Xc,Xc,Xt, Xt], [Yt,Yt,Yc,Yc,Yt], label="Máxima Tensão", color='yellow')
 tsai_hill, sigc, sigt = plot_tsai_hill(Xt,Yt,S12,Xc,Yc,sigma_12)
-plt.plot(sigt, tsai_hill[0:499], label="Tsai-Hill", color='green')
-plt.plot(sigc, tsai_hill[500:999], label = False, color='green')
-plt.plot(sigc, tsai_hill[1000:1499], label = False, color='green')
-plt.plot(sigt, tsai_hill[1500:1999], label = False, color='green')
+plt.plot(sigt, tsai_hill[0:499], label="Tsai-Hill", color='blue')
+plt.plot(sigc, tsai_hill[500:999], label = False, color='blue')
+plt.plot(sigc, tsai_hill[1000:1499], label = False, color='blue')
+plt.plot(sigt, tsai_hill[1500:1999], label = False, color='blue')
+
+
+
+# plotando a ditribuição de tensões e deformações
+dist_tensao = np.zeros(3*n_lam)
+for i in range(0,n_lam,1):
+    for j in range(0,3,1):
+        dist_tensao.itemset(i,tensao_global[i][j])
+h_lam_dist = np.zeros(3*n_lam)
+for i in range(0,n_lam,2):
+    h_lam_dist.itemset(i,h_lam[i])
+    h_lam_dist.itemset(i+1,(h_lam[i+1]+h_lam[i])/2)
+    h_lam_dist.itemset(i+2,h_lam[i+1])
+
+
+fig, axs = plt.subplots(1, 2)
+axs[0].plot(dist_tensao,h_lam_dist)
+
+
+
 
 
 
