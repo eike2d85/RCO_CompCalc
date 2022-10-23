@@ -1,7 +1,9 @@
 import numpy as np
+from plot_tsai_hill import plot_tsai_hill
 from regmist_input import regmist_input
 from matriz import matriz
 from deformacao import deformacao
+import matplotlib.pyplot as plt
 from tensao import tensao
 '''
 OBJETIVO: Plotar a superfície de falha pelos 3 critérios e mostrar o ponto de cada lâmina. Printar se cada lâmina falhou ou não e o tipo da falha.
@@ -27,13 +29,20 @@ elif ent_opt == 1:
     props = regmist_input(Ef, Em, Vf)
 else:
     print('Opção Inválida de entrada')
-
+# Carregamentos
 Nx = 1000 # N/mm
 Ny = 200 # N/mm
 Nz = 0 # N/mm
 Mx = 0 # N/mm
 My = 0 # N/mm
 Mz = 0 # N/mm
+
+# Dados de material
+Xt = 1447.0E6      # Resistência à tração 
+Xc = -1447.0E6     # Resistência à compressão 
+Yt = 51.7E6        # Resistência à tração 
+Yc = -206.0E6      # Resistência à compressão 
+S12 = 93.0E6       # Resistência ao cisalhamento no plano 1-2  
 pos_lam = [0, 90, 90, 0, 45, 45]
 h = 3 # mm (espessura de cada lâmina)
 #----------------------FIM DOS INPUTS-----------------------
@@ -71,3 +80,20 @@ print('Deformações_lâmina :\n', def_lamina)
 print('Deformações_local :\n', def_local)
 print('Tensões Globais :\n', tensao_global)
 print('Tensões Local :\n', tensao_local)
+
+sigma_12 = 80000 #isso de ve ser retirado, é so teste
+
+
+plt.figure()
+plt.axis('equal')
+plt.plot([Xt,Xc,Xc,Xt, Xt], [Yt,Yt,Yc,Yc,Yt], label="Máxima Tensão", color='pink')
+tsai_hill, sigc, sigt = plot_tsai_hill(Xt,Yt,S12,Xc,Yc,sigma_12)
+plt.plot(sigt, tsai_hill[0:499], label="Tsai-Hill", color='green')
+plt.plot(sigc, tsai_hill[500:999], label = False, color='green')
+plt.plot(sigc, tsai_hill[1000:1499], label = False, color='green')
+plt.plot(sigt, tsai_hill[1500:1999], label = False, color='green')
+
+
+
+
+plt.show()

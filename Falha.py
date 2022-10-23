@@ -23,7 +23,7 @@ def TsaiHill(sigma, material):
     else:
         f = (sigma_1/Xc)**2 + (sigma_2/Yt)**2 + (sigma_1*sigma_2/Xc**2) + (sigma_12/S12)**2
         FS = np.sqrt(f)
-
+    
     MS_TH = (1/FS) - 1
     return(MS_TH)
 
