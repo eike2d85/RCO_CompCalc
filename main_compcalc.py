@@ -6,6 +6,7 @@ from matriz import matriz
 from deformacao import deformacao
 import matplotlib.pyplot as plt
 from tensao import tensao
+from Falha import *
 '''
 OBJETIVO: Plotar a superfície de falha pelos 3 critérios e mostrar o ponto de cada lâmina. Printar se cada lâmina falhou ou não e o tipo da falha.
     -> Entrada pelas propriedades diretas ou regra das misturas;
@@ -13,7 +14,7 @@ OBJETIVO: Plotar a superfície de falha pelos 3 critérios e mostrar o ponto de 
 CONSIDERAÇÕES:
     -> Todas as lâminas do mesmo material e mesma espessura;
 '''
-#----------------INÍCIO DOS INPUTS----------------
+#---------------- 1- INÍCIO DOS INPUTS ----------------
 # Opções de entrada: 0-> Propriedades diretas do material; 1->Regra das Misturas
 ent_opt = 0
 
@@ -31,8 +32,8 @@ elif ent_opt == 1:
 else:
     print('Opção Inválida de entrada')
 # Carregamentos
-Nx = 1000 # N/mm
-Ny = 200 # N/mm
+Nx = 100 # N/mm
+Ny = 0 # N/mm
 Nz = 0 # N/mm
 Mx = 0 # N/mm
 My = 0 # N/mm
@@ -44,9 +45,9 @@ Xc = -1447.0E6     # Resistência à compressão X
 Yt = 51.7E6        # Resistência à tração Y
 Yc = -206.0E6      # Resistência à compressão Y
 S12 = 93.0E6       # Resistência ao cisalhamento no plano 1-2  
-pos_lam = [0, 90, 90, 0, 45, 45]
+pos_lam = [0, 0, 0]
 h = 0.5 # mm (espessura de cada lâmina)
-#----------------------FIM DOS INPUTS-----------------------
+#---------------------- FIM DOS INPUTS -----------------------
 F = [Nx, Ny, Nz, Mx, My, Mz]
 F = np.array(F)
 pos_lam_rad = np.multiply(np.pi/180, pos_lam)
@@ -59,17 +60,29 @@ G12 = props[3]
 
 if n_lam % 2 == 0: # se o numero de lâminas for PAR entra aqui
     for i in range(0 ,n_lam+1, 1):
-        h_lam.itemset((i), -((n_lam/2)-i)*h)
+        h_lam.itemset((i), +((n_lam/2)-i)*h)
 
 else: # se o numero de lâminas for IMPAR entra aqui
     for i in range(0,n_lam+1, 1):
-        h_lam.itemset((i), -((n_lam/2)-i)*h ) 
+        h_lam.itemset((i), +((n_lam/2)-i)*h) 
 
+h_lam_dist = np.zeros(3*n_lam) # h para calcular 3 pontos por lamina para o caso de flexão
+j = 0
+for i in range(0,np.size(h_lam_dist),3):
+    
+    h_lam_dist.itemset(i,h_lam[j])
+    h_lam_dist.itemset(i+1,(h_lam[j+1]+h_lam[j])/2)
+    h_lam_dist.itemset(i+2,h_lam[j+1])
+    j = j+1
+
+#---------------------- 2 - CALCULO DAS MATRIZES DE RIGIDEZ -----------------------
 Q_lam, ABBD, ABBD_inv = matriz(E1, E2, G12, v12, pos_lam, h_lam, n_lam)
 
-def_global, k_global, def_lamina, def_local= deformacao(n_lam, h_lam, pos_lam_rad, ABBD_inv, F)
-tensao_global, tensao_local= tensao(n_lam, h_lam, pos_lam_rad, k_global, def_global, Q_lam)
+#---------------------- 3 - CALCULO DAS DEFORMAÇÕES E TENSÕES -----------------------
+def_global, k_global, def_lamina, def_local= deformacao(n_lam, h_lam_dist, pos_lam_rad, ABBD_inv, F)
+tensao_global, tensao_local= tensao(n_lam, h_lam_dist, pos_lam_rad, k_global, def_global, Q_lam)
 
+#---------------------- 4 - PRINT DOS RESULTADOS DAS ETAPAS 2,3-----------------------
 print('ABBD :\n', ABBD)
 print('ABBD invertida:\n', ABBD_inv)
 for fiona in range(0,n_lam,1):
@@ -85,7 +98,7 @@ sigma_12 = 0 #isso deve ser retirado, é so teste
 
 
 plt.figure(1)
-plt.axis('equal')
+#plt.axis('equal')
 
 #plotando Tensão Máxima
 plt.plot([Xt,Xc,Xc,Xt, Xt], [Yt,Yt,Yc,Yc,Yt], label="Máxima Tensão", color='yellow')
@@ -103,24 +116,26 @@ plt.plot(sig1, sig2, label = "Tsai-Wu", color='purple')
 plt.plot(sig1, sig3, label = False, color='purple')
 
 # plotando a ditribuição de tensões e deformações
-dist_tensao = np.zeros(3*n_lam)
-for i in range(0,n_lam,1):
-    for j in range(0,3,1):
-        dist_tensao.itemset(i,tensao_global[i][j])
-h_lam_dist = np.zeros(3*n_lam)
-for i in range(0,n_lam,2):
-    h_lam_dist.itemset(i,h_lam[i])
-    h_lam_dist.itemset(i+1,(h_lam[i+1]+h_lam[i])/2)
-    h_lam_dist.itemset(i+2,h_lam[i+1])
+dist_sigma1 = np.zeros(3*n_lam)
+dist_sigma2 = np.zeros(3*n_lam)
+dist_sigma12 = np.zeros(3*n_lam)
+dist_def1 = np.zeros(3*n_lam)
+dist_def2 = np.zeros(3*n_lam)
+dist_def12 = np.zeros(3*n_lam)
 
+for i in range(0,np.size(h_lam_dist),1):
+    dist_sigma1.itemset(i,tensao_global[i][0])
+    dist_sigma2.itemset(i,tensao_global[i][1])
+    dist_sigma12.itemset(i,tensao_global[i][2])
+    dist_def1.itemset(i,def_lamina[i][0])
+    dist_def2.itemset(i,def_lamina[i][0])
+    dist_def12.itemset(i,def_lamina[i][0])
 
-fig, axs = plt.subplots(1, 2)
-axs[0].plot(dist_tensao,h_lam_dist)
-
-
-
-
-
-
-
+fig, axs = plt.subplots(2, 3)
+axs[0,0].plot(dist_sigma1,h_lam_dist)
+axs[0,1].plot(dist_sigma2,h_lam_dist)
+axs[0,2].plot(dist_sigma12,h_lam_dist)
+axs[1,0].plot(dist_def1,h_lam_dist)
+axs[1,1].plot(dist_def2,h_lam_dist)
+axs[1,2].plot(dist_def12,h_lam_dist)
 plt.show()

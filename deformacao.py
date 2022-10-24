@@ -3,24 +3,24 @@ import math
 
 def deformacao(num, h, lam_ori_rad, Qg_inv, esf):
 
-    def_lamina = np.zeros(num)
-    def_lamina = def_lamina.ravel().tolist()
+    def_global = np.zeros(3*num)
+    def_global = def_global.ravel().tolist()
 
-    def_principal = np.zeros(num)
-    def_principal = def_principal.ravel().tolist()
+    def_local = np.zeros(num)
+    def_local = def_local.ravel().tolist()
 
     #-----------------------Deformação Global------------------------
-    dk_global = np.dot(Qg_inv, esf.T)
+    dk_medio = np.dot(Qg_inv, esf.T)
     #Deformações
-    def_global = np.array([[dk_global[0]], [dk_global[1]], [dk_global[2]]])
-    def_global = np.reshape(def_global, (3,1))
+    def_medio = np.array([[dk_medio[0]], [dk_medio[1]], [dk_medio[2]]])
+    def_medio = np.reshape(def_medio, (3,1))
     #Curvatura
-    k_global = np.array([[dk_global[3]], [dk_global[4]], [dk_global[5]]])
-    k_global = np.reshape(k_global, (3,1))
+    k_medio = np.array([[dk_medio[3]], [dk_medio[4]], [dk_medio[5]]])
+    k_medio = np.reshape(k_medio, (3,1))
 
     #--------------------Deformação da Lamina---------------------   
-    for lamina in range(num):
-        def_lamina[lamina] = def_global + h[lamina]*k_global   
+    for lamina in range(3*num):
+        def_global[lamina] = def_medio + h[lamina]*k_medio   
 
     #---------------------------Matriz R----------------------------
     R = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 2]])
@@ -30,6 +30,8 @@ def deformacao(num, h, lam_ori_rad, Qg_inv, esf):
         m = math.cos(lam_ori_rad[lamina])
         n = math.sin(lam_ori_rad[lamina])
         T = np.array([[m**2, n**2, 2*m*n], [n**2, m**2, -2*m*n], [-m*n, m*n, (m**2 - n**2)]])
-        def_principal[lamina] = np.linalg.multi_dot([R, T, R_inv, def_lamina[lamina]])
+        def_local[lamina] = np.linalg.multi_dot([R, T, R_inv, def_global[lamina]])
 
-    return(def_global, k_global, def_lamina, def_principal)
+    return(def_medio, k_medio, def_global, def_local)
+
+    #def plotdeformacao 
