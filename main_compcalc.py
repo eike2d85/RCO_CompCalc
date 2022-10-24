@@ -1,5 +1,6 @@
 import numpy as np
 from plot_tsai_hill import plot_tsai_hill
+from plot_tsai_wu import plot_tsai_wu
 from regmist_input import regmist_input
 from matriz import matriz
 from deformacao import deformacao
@@ -85,14 +86,21 @@ sigma_12 = 0 #isso deve ser retirado, é so teste
 
 plt.figure(1)
 plt.axis('equal')
+
+#plotando Tensão Máxima
 plt.plot([Xt,Xc,Xc,Xt, Xt], [Yt,Yt,Yc,Yc,Yt], label="Máxima Tensão", color='yellow')
+
+#plotando Tsai-Hill
 tsai_hill, sigc, sigt = plot_tsai_hill(Xt,Yt,S12,Xc,Yc,sigma_12)
-plt.plot(sigt, tsai_hill[0:499], label="Tsai-Hill", color='blue')
+plt.plot(sigt, tsai_hill[0:499], label = "Tsai-Hill", color='blue')
 plt.plot(sigc, tsai_hill[500:999], label = False, color='blue')
 plt.plot(sigc, tsai_hill[1000:1499], label = False, color='blue')
 plt.plot(sigt, tsai_hill[1500:1999], label = False, color='blue')
 
-
+#plotando Tsai-Wu
+sig1, sig2, sig3 = plot_tsai_wu(Xt, Yt, S12, Xc, Yc, sigma_12)
+plt.plot(sig1, sig2, label = "Tsai-Wu", color='purple')
+plt.plot(sig1, sig3, label = False, color='purple')
 
 # plotando a ditribuição de tensões e deformações
 dist_tensao = np.zeros(3*n_lam)
